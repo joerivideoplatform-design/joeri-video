@@ -159,7 +159,7 @@ body {
 
 .video-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
     gap: 20px;
     max-width: 1800px;
     margin: 0 auto;
@@ -985,7 +985,7 @@ body {
     font-size: 11px;
     color: #555;
     z-index: 50;
-    opacity: 0;
+    opacity: 0.5;
     transition: opacity 0.3s ease;
 }
 
