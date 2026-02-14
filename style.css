@@ -250,7 +250,9 @@ body {
 }
 
 .video-info-card {
-    padding: 12px 0;
+    padding: 12px 4px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .video-title {
@@ -1046,7 +1048,7 @@ body {
     .video-grid {
         grid-template-columns: 1fr;
         max-width: 100%;
-        padding: 0;
+        padding: 0 8px;
         gap: 16px;
     }
 
@@ -1057,6 +1059,10 @@ body {
 
     .video-thumbnail {
         width: 100%;
+    }
+
+    .video-info-card {
+        padding: 12px 8px;
     }
 
     .delete-video-btn {
