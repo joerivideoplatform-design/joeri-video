@@ -44,11 +44,25 @@ let recordedBlob = null;
 let videos = [];
 let selectedThumbnailTime = 1; // Default thumbnail at 1 second
 let thumbnailGrid = null;
+let selectedFilter = 'none';
+let currentEditingVideo = null;
+
+// Site settings
+let siteSettings = {
+    siteName: "Joeri's Video's",
+    emptyStateTitle: "Nog geen video's",
+    emptyStateText: "Klik op \"Voeg toe\" om je eerste video op te nemen!"
+};
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    loadSiteSettings();
     loadVideos();
     setupEventListeners();
+    setupSidebar();
+    setupAdmin();
+    setupFilters();
+    setupEditor();
 });
 
 function setupEventListeners() {
@@ -198,6 +212,22 @@ function resetRecordingState() {
     recordingTime.style.display = 'none';
     recordingSeconds = 0;
     videoTitle.value = '';
+    selectedFilter = 'none';
+
+    // Reset filter buttons
+    const filterBtns = document.querySelectorAll('#filterBar .filter-btn');
+    filterBtns.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === 'none');
+    });
+
+    // Reset filter on video elements
+    const cameraPreview = document.getElementById('cameraPreview');
+    const recordedPreview = document.getElementById('recordedPreview');
+    const filters = ['filter-none', 'filter-grayscale', 'filter-sepia', 'filter-contrast', 'filter-warm', 'filter-cool'];
+    filters.forEach(f => {
+        cameraPreview.classList.remove(f);
+        recordedPreview.classList.remove(f);
+    });
 }
 
 function toggleRecording() {
@@ -391,6 +421,7 @@ async function uploadRecording() {
             cloudinaryId: cloudinaryData.public_id,
             duration: recordingSeconds,
             thumbnailTime: Math.round(selectedThumbnailTime),
+            filter: selectedFilter,
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             createdAtLocal: new Date().toISOString()
         };
@@ -505,6 +536,7 @@ function getCloudinaryThumbnail(videoUrl, timeInSeconds) {
 }
 
 function playVideo(video) {
+    currentEditingVideo = { ...video };
     playerTitle.textContent = video.title;
     videoDate.textContent = video.createdAtLocal
         ? new Date(video.createdAtLocal).toLocaleDateString('nl-NL', {
@@ -515,6 +547,14 @@ function playVideo(video) {
             minute: '2-digit'
           })
         : '';
+
+    // Apply filter if set
+    const filters = ['filter-none', 'filter-grayscale', 'filter-sepia', 'filter-contrast', 'filter-warm', 'filter-cool'];
+    filters.forEach(f => videoPlayer.classList.remove(f));
+    if (video.filter && video.filter !== 'none') {
+        videoPlayer.classList.add(`filter-${video.filter}`);
+    }
+
     videoPlayer.src = video.url;
     showModal(playerModal);
     videoPlayer.play();
@@ -543,4 +583,358 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// ==================== SIDEBAR ====================
+
+function setupSidebar() {
+    const menuBtn = document.getElementById('menuBtn');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    const closeSidebar = document.getElementById('closeSidebar');
+
+    if (!menuBtn || !sidebar) return;
+
+    menuBtn.addEventListener('click', () => {
+        sidebar.classList.add('active');
+        sidebarOverlay.classList.add('active');
+    });
+
+    closeSidebar.addEventListener('click', closeSidebarMenu);
+    sidebarOverlay.addEventListener('click', closeSidebarMenu);
+
+    function closeSidebarMenu() {
+        sidebar.classList.remove('active');
+        sidebarOverlay.classList.remove('active');
+    }
+}
+
+// ==================== ADMIN ====================
+
+function setupAdmin() {
+    const adminLink = document.getElementById('adminLink');
+    const adminModal = document.getElementById('adminModal');
+    const closeAdminModal = document.getElementById('closeAdminModal');
+    const adminPasswordInput = document.getElementById('adminPasswordInput');
+    const adminLoginBtn = document.getElementById('adminLoginBtn');
+    const adminError = document.getElementById('adminError');
+    const adminLogin = document.getElementById('adminLogin');
+    const adminPanel = document.getElementById('adminPanel');
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+
+    if (!adminLink || !adminModal) return;
+
+    adminLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Close sidebar first
+        document.getElementById('sidebar').classList.remove('active');
+        document.getElementById('sidebarOverlay').classList.remove('active');
+        // Open admin modal
+        showModal(adminModal);
+        adminPasswordInput.value = '';
+        adminError.textContent = '';
+        adminLogin.style.display = 'block';
+        adminPanel.style.display = 'none';
+    });
+
+    closeAdminModal.addEventListener('click', () => hideModal(adminModal));
+
+    adminLoginBtn.addEventListener('click', () => {
+        if (adminPasswordInput.value === CORRECT_PASSWORD) {
+            adminLogin.style.display = 'none';
+            adminPanel.style.display = 'block';
+            loadSettingsIntoForm();
+        } else {
+            adminError.textContent = 'Verkeerd wachtwoord';
+            adminPasswordInput.value = '';
+        }
+    });
+
+    adminPasswordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') adminLoginBtn.click();
+    });
+
+    saveSettingsBtn.addEventListener('click', saveSettings);
+
+    adminModal.addEventListener('click', (e) => {
+        if (e.target === adminModal) hideModal(adminModal);
+    });
+}
+
+function loadSettingsIntoForm() {
+    document.getElementById('siteNameInput').value = siteSettings.siteName;
+    document.getElementById('emptyStateTitle').value = siteSettings.emptyStateTitle;
+    document.getElementById('emptyStateText').value = siteSettings.emptyStateText;
+}
+
+async function loadSiteSettings() {
+    try {
+        if (typeof firebase === 'undefined' || !firebase.apps.length) return;
+
+        const firestore = firebase.firestore();
+        const doc = await firestore.collection('settings').doc('site').get();
+
+        if (doc.exists) {
+            siteSettings = { ...siteSettings, ...doc.data() };
+            applySiteSettings();
+        }
+    } catch (error) {
+        console.error('Error loading settings:', error);
+    }
+}
+
+async function saveSettings() {
+    const newSettings = {
+        siteName: document.getElementById('siteNameInput').value || siteSettings.siteName,
+        emptyStateTitle: document.getElementById('emptyStateTitle').value || siteSettings.emptyStateTitle,
+        emptyStateText: document.getElementById('emptyStateText').value || siteSettings.emptyStateText
+    };
+
+    showLoading('Opslaan...');
+
+    try {
+        const firestore = firebase.firestore();
+        await firestore.collection('settings').doc('site').set(newSettings);
+
+        siteSettings = newSettings;
+        applySiteSettings();
+
+        hideLoading();
+        hideModal(document.getElementById('adminModal'));
+        alert('Instellingen opgeslagen!');
+    } catch (error) {
+        console.error('Error saving settings:', error);
+        hideLoading();
+        alert('Fout bij opslaan: ' + error.message);
+    }
+}
+
+function applySiteSettings() {
+    // Update site name in header
+    const logoText = document.querySelector('.logo span');
+    if (logoText) logoText.textContent = siteSettings.siteName;
+
+    // Update page title
+    document.title = siteSettings.siteName;
+
+    // Update empty state
+    const emptyStateH2 = document.querySelector('.empty-state h2');
+    const emptyStateP = document.querySelector('.empty-state p');
+    if (emptyStateH2) emptyStateH2.textContent = siteSettings.emptyStateTitle;
+    if (emptyStateP) emptyStateP.textContent = siteSettings.emptyStateText;
+}
+
+// ==================== FILTERS ====================
+
+function setupFilters() {
+    const filterBar = document.getElementById('filterBar');
+    if (!filterBar) return;
+
+    const filterBtns = filterBar.querySelectorAll('.filter-btn');
+
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedFilter = btn.dataset.filter;
+            applyFilterToPreview();
+        });
+    });
+}
+
+function applyFilterToPreview() {
+    const cameraPreview = document.getElementById('cameraPreview');
+    const recordedPreview = document.getElementById('recordedPreview');
+
+    // Remove all filter classes
+    const filters = ['filter-none', 'filter-grayscale', 'filter-sepia', 'filter-contrast', 'filter-warm', 'filter-cool'];
+    filters.forEach(f => {
+        cameraPreview.classList.remove(f);
+        recordedPreview.classList.remove(f);
+    });
+
+    // Add selected filter
+    cameraPreview.classList.add(`filter-${selectedFilter}`);
+    recordedPreview.classList.add(`filter-${selectedFilter}`);
+}
+
+// ==================== VIDEO EDITOR ====================
+
+function setupEditor() {
+    const editVideoBtn = document.getElementById('editVideoBtn');
+    const editorModal = document.getElementById('editorModal');
+    const closeEditorModal = document.getElementById('closeEditorModal');
+    const saveEditorBtn = document.getElementById('saveEditorBtn');
+    const deleteVideoBtn = document.getElementById('deleteVideoBtn');
+
+    if (!editVideoBtn || !editorModal) return;
+
+    editVideoBtn.addEventListener('click', openEditor);
+    closeEditorModal.addEventListener('click', () => hideModal(editorModal));
+    saveEditorBtn.addEventListener('click', saveVideoEdits);
+    deleteVideoBtn.addEventListener('click', deleteVideo);
+
+    // Editor filter buttons
+    const editorFilters = editorModal.querySelectorAll('.editor-filters .filter-btn');
+    editorFilters.forEach(btn => {
+        btn.addEventListener('click', () => {
+            editorFilters.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            applyEditorFilter(btn.dataset.filter);
+        });
+    });
+
+    editorModal.addEventListener('click', (e) => {
+        if (e.target === editorModal) hideModal(editorModal);
+    });
+}
+
+function openEditor() {
+    if (!currentEditingVideo) return;
+
+    const editorModal = document.getElementById('editorModal');
+    const editorVideo = document.getElementById('editorVideo');
+    const editorTitle = document.getElementById('editorTitle');
+    const editorThumbnailGrid = document.getElementById('editorThumbnailGrid');
+
+    // Set video
+    editorVideo.src = currentEditingVideo.url;
+    editorTitle.value = currentEditingVideo.title;
+
+    // Set active filter
+    const editorFilters = editorModal.querySelectorAll('.editor-filters .filter-btn');
+    editorFilters.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === (currentEditingVideo.filter || 'none'));
+    });
+
+    applyEditorFilter(currentEditingVideo.filter || 'none');
+
+    // Close player modal and open editor
+    hideModal(document.getElementById('playerModal'));
+    videoPlayer.pause();
+    showModal(editorModal);
+
+    // Generate thumbnails after video loads
+    editorVideo.onloadedmetadata = () => {
+        generateEditorThumbnails();
+    };
+}
+
+function generateEditorThumbnails() {
+    const editorVideo = document.getElementById('editorVideo');
+    const editorThumbnailGrid = document.getElementById('editorThumbnailGrid');
+    const duration = editorVideo.duration;
+    const numThumbnails = Math.min(6, Math.max(3, Math.floor(duration)));
+
+    editorThumbnailGrid.innerHTML = '';
+
+    for (let i = 0; i < numThumbnails; i++) {
+        const time = (duration / numThumbnails) * i + (duration / numThumbnails / 2);
+        const isSelected = Math.abs(time - (currentEditingVideo.thumbnailTime || 1)) < 1;
+        createEditorThumbnailOption(time, isSelected);
+    }
+}
+
+function createEditorThumbnailOption(time, isSelected) {
+    const editorThumbnailGrid = document.getElementById('editorThumbnailGrid');
+    const editorVideo = document.getElementById('editorVideo');
+
+    const option = document.createElement('div');
+    option.className = 'thumbnail-option' + (isSelected ? ' selected' : '');
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 240;
+    canvas.height = 135;
+    option.appendChild(canvas);
+
+    // Capture frame
+    const tempVideo = document.createElement('video');
+    tempVideo.src = editorVideo.src;
+    tempVideo.muted = true;
+    tempVideo.crossOrigin = 'anonymous';
+
+    tempVideo.onloadedmetadata = () => {
+        tempVideo.currentTime = time;
+    };
+
+    tempVideo.onseeked = () => {
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
+        tempVideo.remove();
+    };
+
+    option.onclick = () => {
+        editorThumbnailGrid.querySelectorAll('.thumbnail-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+        option.classList.add('selected');
+        currentEditingVideo.newThumbnailTime = time;
+    };
+
+    if (isSelected) {
+        currentEditingVideo.newThumbnailTime = time;
+    }
+
+    editorThumbnailGrid.appendChild(option);
+}
+
+function applyEditorFilter(filter) {
+    const editorVideo = document.getElementById('editorVideo');
+    const filters = ['filter-none', 'filter-grayscale', 'filter-sepia', 'filter-contrast', 'filter-warm', 'filter-cool'];
+    filters.forEach(f => editorVideo.classList.remove(f));
+    editorVideo.classList.add(`filter-${filter}`);
+    currentEditingVideo.newFilter = filter;
+}
+
+async function saveVideoEdits() {
+    const newTitle = document.getElementById('editorTitle').value.trim();
+
+    if (!newTitle) {
+        alert('Vul een titel in');
+        return;
+    }
+
+    showLoading('Opslaan...');
+
+    try {
+        const firestore = firebase.firestore();
+        const updates = {
+            title: newTitle,
+            thumbnailTime: Math.round(currentEditingVideo.newThumbnailTime || currentEditingVideo.thumbnailTime || 1),
+            filter: currentEditingVideo.newFilter || currentEditingVideo.filter || 'none'
+        };
+
+        await firestore.collection('videos').doc(currentEditingVideo.id).update(updates);
+
+        hideLoading();
+        hideModal(document.getElementById('editorModal'));
+        alert('Video bijgewerkt!');
+        loadVideos();
+    } catch (error) {
+        console.error('Error saving:', error);
+        hideLoading();
+        alert('Fout bij opslaan: ' + error.message);
+    }
+}
+
+async function deleteVideo() {
+    if (!confirm('Weet je zeker dat je deze video wilt verwijderen?')) {
+        return;
+    }
+
+    showLoading('Verwijderen...');
+
+    try {
+        const firestore = firebase.firestore();
+        await firestore.collection('videos').doc(currentEditingVideo.id).delete();
+
+        hideLoading();
+        hideModal(document.getElementById('editorModal'));
+        alert('Video verwijderd!');
+        loadVideos();
+    } catch (error) {
+        console.error('Error deleting:', error);
+        hideLoading();
+        alert('Fout bij verwijderen: ' + error.message);
+    }
 }

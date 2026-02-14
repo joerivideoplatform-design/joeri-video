@@ -43,6 +43,72 @@
         </div>
     </header>
 
+    <!-- Sidebar Menu -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>Menu</span>
+            <button class="close-btn" id="closeSidebar">&times;</button>
+        </div>
+        <ul class="sidebar-menu">
+            <li>
+                <a href="index.html" class="sidebar-link active">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                    </svg>
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="nieuws.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 6h16v2H4V6zm0 4h16v2H4v-2zm0 4h16v2H4v-2z"/>
+                    </svg>
+                    <span>Nieuws</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="sidebar-link" id="adminLink">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                    </svg>
+                    <span>Admin</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Admin Modal -->
+    <div class="modal" id="adminModal">
+        <div class="modal-content admin-modal-content">
+            <div class="admin-header">
+                <h2>Admin Instellingen</h2>
+                <button class="close-btn" id="closeAdminModal">&times;</button>
+            </div>
+            <div class="admin-body" id="adminBody">
+                <div class="admin-login" id="adminLogin">
+                    <p>Voer het admin wachtwoord in</p>
+                    <input type="password" id="adminPasswordInput" placeholder="Wachtwoord">
+                    <button class="btn btn-primary" id="adminLoginBtn">Inloggen</button>
+                    <p class="error-message" id="adminError"></p>
+                </div>
+                <div class="admin-panel" id="adminPanel" style="display: none;">
+                    <div class="admin-section">
+                        <h3>Site Instellingen</h3>
+                        <label>Site Naam</label>
+                        <input type="text" id="siteNameInput" placeholder="Joeri's Video's">
+                        <label>Welkomstekst (lege staat)</label>
+                        <input type="text" id="emptyStateTitle" placeholder="Nog geen video's">
+                        <input type="text" id="emptyStateText" placeholder="Klik op Voeg toe om je eerste video op te nemen!">
+                    </div>
+                    <div class="admin-buttons">
+                        <button class="btn btn-primary" id="saveSettingsBtn">Opslaan</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Content -->
     <main class="main-content">
         <div class="video-grid" id="videoGrid">
@@ -82,6 +148,17 @@
                 <video id="cameraPreview" autoplay playsinline muted></video>
                 <video id="recordedPreview" playsinline style="display: none;"></video>
             </div>
+            <div class="filter-bar" id="filterBar">
+                <span class="filter-label">Filter:</span>
+                <div class="filter-options">
+                    <button class="filter-btn active" data-filter="none">Geen</button>
+                    <button class="filter-btn" data-filter="grayscale">Zwart-wit</button>
+                    <button class="filter-btn" data-filter="sepia">Sepia</button>
+                    <button class="filter-btn" data-filter="contrast">Contrast</button>
+                    <button class="filter-btn" data-filter="warm">Warm</button>
+                    <button class="filter-btn" data-filter="cool">Koel</button>
+                </div>
+            </div>
             <div class="camera-controls">
                 <button class="camera-switch-btn" id="switchCamera" title="Wissel camera">
                     <svg viewBox="0 0 24 24" width="24" height="24">
@@ -113,7 +190,14 @@
         <div class="modal-content player-modal-content">
             <div class="player-header">
                 <h2 id="playerTitle">Video</h2>
-                <button class="close-btn" id="closePlayerModal">&times;</button>
+                <div class="player-actions">
+                    <button class="icon-btn" id="editVideoBtn" title="Bewerken">
+                        <svg viewBox="0 0 24 24" width="20" height="20">
+                            <path fill="currentColor" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+                        </svg>
+                    </button>
+                    <button class="close-btn" id="closePlayerModal">&times;</button>
+                </div>
             </div>
             <div class="player-container">
                 <video id="videoPlayer" controls playsinline></video>
@@ -124,9 +208,48 @@
         </div>
     </div>
 
+    <!-- Video Editor Modal -->
+    <div class="modal" id="editorModal">
+        <div class="modal-content editor-modal-content">
+            <div class="editor-header">
+                <h2>Video bewerken</h2>
+                <button class="close-btn" id="closeEditorModal">&times;</button>
+            </div>
+            <div class="editor-body">
+                <div class="editor-preview">
+                    <video id="editorVideo" playsinline muted></video>
+                </div>
+                <div class="editor-section">
+                    <h3>Titel</h3>
+                    <input type="text" id="editorTitle" placeholder="Video titel">
+                </div>
+                <div class="editor-section">
+                    <h3>Thumbnail</h3>
+                    <p class="editor-hint">Kies een nieuw frame als thumbnail</p>
+                    <div class="thumbnail-grid" id="editorThumbnailGrid"></div>
+                </div>
+                <div class="editor-section">
+                    <h3>Filter</h3>
+                    <div class="filter-options editor-filters">
+                        <button class="filter-btn" data-filter="none">Geen</button>
+                        <button class="filter-btn" data-filter="grayscale">Zwart-wit</button>
+                        <button class="filter-btn" data-filter="sepia">Sepia</button>
+                        <button class="filter-btn" data-filter="contrast">Contrast</button>
+                        <button class="filter-btn" data-filter="warm">Warm</button>
+                        <button class="filter-btn" data-filter="cool">Koel</button>
+                    </div>
+                </div>
+                <div class="editor-buttons">
+                    <button class="btn btn-secondary" id="deleteVideoBtn">Verwijderen</button>
+                    <button class="btn btn-primary" id="saveEditorBtn">Opslaan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer met versienummer -->
     <footer class="site-footer">
-        <span>v1.0.0</span>
+        <span>v1.1.0</span>
     </footer>
 
     <!-- Loading Overlay -->

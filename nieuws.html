@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nieuws - Joeri's Video's</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-btn" id="menuBtn">
+                <svg viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor" d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                </svg>
+            </button>
+            <a href="index.html" class="logo">
+                <svg viewBox="0 0 24 24" width="32" height="32">
+                    <path fill="#FF0000" d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zM9 16V8l8 3.993L9 16z"/>
+                </svg>
+                <span>Joeri's Video's</span>
+            </a>
+        </div>
+        <div class="header-center">
+            <h1 class="page-title">Nieuws</h1>
+        </div>
+        <div class="header-right">
+            <button class="icon-btn add-video-btn" id="addNewsBtn" title="Nieuws toevoegen">
+                <svg viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                </svg>
+                <span class="btn-text">Toevoegen</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Sidebar Menu -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span>Menu</span>
+            <button class="close-btn" id="closeSidebar">&times;</button>
+        </div>
+        <ul class="sidebar-menu">
+            <li>
+                <a href="index.html" class="sidebar-link">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                    </svg>
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="nieuws.html" class="sidebar-link active">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 6h16v2H4V6zm0 4h16v2H4v-2zm0 4h16v2H4v-2z"/>
+                    </svg>
+                    <span>Nieuws</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="sidebar-link" id="adminLink">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path fill="currentColor" d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                    </svg>
+                    <span>Admin</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content news-content">
+        <div class="news-list" id="newsList">
+            <div class="empty-state" id="emptyState">
+                <svg viewBox="0 0 24 24" width="80" height="80">
+                    <path fill="#909090" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM4 6h16v2H4V6zm0 4h16v2H4v-2zm0 4h16v2H4v-2z"/>
+                </svg>
+                <h2>Nog geen nieuws</h2>
+                <p>Klik op "Toevoegen" om het eerste nieuwsbericht te plaatsen!</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Wachtwoord Modal -->
+    <div class="modal" id="passwordModal">
+        <div class="modal-content">
+            <h2>Voer wachtwoord in</h2>
+            <p>Om nieuws toe te voegen heb je het wachtwoord nodig</p>
+            <input type="password" id="passwordInput" placeholder="Wachtwoord">
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" id="cancelPassword">Annuleren</button>
+                <button class="btn btn-primary" id="submitPassword">Doorgaan</button>
+            </div>
+            <p class="error-message" id="passwordError"></p>
+        </div>
+    </div>
+
+    <!-- Nieuws Toevoegen Modal -->
+    <div class="modal" id="newsModal">
+        <div class="modal-content news-modal-content">
+            <div class="news-modal-header">
+                <h2>Nieuws toevoegen</h2>
+                <button class="close-btn" id="closeNewsModal">&times;</button>
+            </div>
+            <div class="news-form">
+                <input type="text" id="newsTitle" placeholder="Titel" maxlength="100">
+                <textarea id="newsContent" placeholder="Schrijf je nieuwsbericht..." rows="6"></textarea>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" id="cancelNews">Annuleren</button>
+                    <button class="btn btn-primary" id="submitNews">Publiceren</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Modal -->
+    <div class="modal" id="adminModal">
+        <div class="modal-content admin-modal-content">
+            <div class="admin-header">
+                <h2>Admin Instellingen</h2>
+                <button class="close-btn" id="closeAdminModal">&times;</button>
+            </div>
+            <div class="admin-body" id="adminBody">
+                <div class="admin-login" id="adminLogin">
+                    <p>Voer het admin wachtwoord in</p>
+                    <input type="password" id="adminPasswordInput" placeholder="Wachtwoord">
+                    <button class="btn btn-primary" id="adminLoginBtn">Inloggen</button>
+                    <p class="error-message" id="adminError"></p>
+                </div>
+                <div class="admin-panel" id="adminPanel" style="display: none;">
+                    <div class="admin-section">
+                        <h3>Site Instellingen</h3>
+                        <label>Site Naam</label>
+                        <input type="text" id="siteNameInput" placeholder="Joeri's Video's">
+                    </div>
+                    <div class="admin-buttons">
+                        <button class="btn btn-primary" id="saveSettingsBtn">Opslaan</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer met versienummer -->
+    <footer class="site-footer">
+        <span>v1.1.0</span>
+    </footer>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <p id="loadingText">Laden...</p>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <!-- App JavaScript -->
+    <script src="firebase-config.js"></script>
+    <script src="nieuws.js"></script>
+</body>
+</html>
