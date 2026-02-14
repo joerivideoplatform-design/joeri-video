@@ -527,53 +527,74 @@ function generateVideoThumbnail(imgElement) {
     const thumbTime = parseFloat(imgElement.dataset.thumbTime) || 1;
     const canvas = imgElement.nextElementSibling;
 
-    const tempVideo = document.createElement('video');
-    tempVideo.crossOrigin = 'anonymous';
-    tempVideo.muted = true;
-    tempVideo.preload = 'metadata';
+    // Direct img verbergen en placeholder tonen
+    imgElement.style.display = 'none';
+    showPlaceholder(canvas);
 
-    tempVideo.onloadedmetadata = () => {
+    const tempVideo = document.createElement('video');
+    tempVideo.muted = true;
+    tempVideo.playsInline = true;
+    tempVideo.preload = 'auto';
+
+    let resolved = false;
+
+    // Timeout: als na 5 sec nog geen frame, blijf bij placeholder
+    const timeout = setTimeout(() => {
+        if (!resolved) {
+            resolved = true;
+            tempVideo.remove();
+        }
+    }, 5000);
+
+    tempVideo.onloadeddata = () => {
         tempVideo.currentTime = Math.min(thumbTime, tempVideo.duration - 0.1);
     };
 
     tempVideo.onseeked = () => {
-        canvas.width = 480;
-        canvas.height = 270;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
+        if (resolved) return;
+        resolved = true;
+        clearTimeout(timeout);
 
-        // Hide img, show canvas
-        imgElement.style.display = 'none';
-        canvas.style.display = 'block';
+        try {
+            canvas.width = 480;
+            canvas.height = 270;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
+        } catch (e) {
+            // CORS error - blijf bij placeholder
+        }
         tempVideo.remove();
     };
 
     tempVideo.onerror = () => {
-        // Als video ook niet laadt, teken placeholder op canvas
-        canvas.width = 480;
-        canvas.height = 270;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#2a2a2a';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Teken video icoon
-        ctx.fillStyle = '#666';
-        ctx.beginPath();
-        const centerX = canvas.width / 2;
-        const centerY = canvas.height / 2;
-        const size = 40;
-        // Play driehoek
-        ctx.moveTo(centerX - size/2, centerY - size/2);
-        ctx.lineTo(centerX - size/2, centerY + size/2);
-        ctx.lineTo(centerX + size/2, centerY);
-        ctx.closePath();
-        ctx.fill();
-
-        imgElement.style.display = 'none';
-        canvas.style.display = 'block';
+        if (resolved) return;
+        resolved = true;
+        clearTimeout(timeout);
+        tempVideo.remove();
     };
 
     tempVideo.src = videoUrl;
+}
+
+function showPlaceholder(canvas) {
+    canvas.width = 480;
+    canvas.height = 270;
+    canvas.style.display = 'block';
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#2a2a2a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Teken play icoon
+    ctx.fillStyle = '#666';
+    ctx.beginPath();
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const size = 40;
+    ctx.moveTo(centerX - size/2, centerY - size/2);
+    ctx.lineTo(centerX - size/2, centerY + size/2);
+    ctx.lineTo(centerX + size/2, centerY);
+    ctx.closePath();
+    ctx.fill();
 }
 
 function getCloudinaryThumbnail(videoUrl, timeInSeconds) {
