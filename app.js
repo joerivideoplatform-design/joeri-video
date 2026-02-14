@@ -42,6 +42,8 @@ let recordingSeconds = 0;
 let useFrontCamera = true;
 let recordedBlob = null;
 let videos = [];
+let selectedThumbnailTime = 1; // Default thumbnail at 1 second
+let thumbnailGrid = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -275,7 +277,6 @@ function showPreview() {
     recordedPreview.style.display = 'block';
     recordedPreview.src = URL.createObjectURL(recordedBlob);
     recordedPreview.controls = true;
-    recordedPreview.play();
     previewControls.style.display = 'block';
     recordingTime.style.display = 'none';
 
@@ -284,6 +285,67 @@ function showPreview() {
         mediaStream.getTracks().forEach(track => track.stop());
         mediaStream = null;
     }
+
+    // Generate thumbnail options after video loads
+    thumbnailGrid = document.getElementById('thumbnailGrid');
+    thumbnailGrid.innerHTML = '';
+
+    recordedPreview.onloadedmetadata = () => {
+        generateThumbnails();
+    };
+}
+
+function generateThumbnails() {
+    const duration = recordedPreview.duration;
+    const numThumbnails = Math.min(6, Math.max(3, Math.floor(duration)));
+
+    thumbnailGrid.innerHTML = '';
+    selectedThumbnailTime = 1;
+
+    for (let i = 0; i < numThumbnails; i++) {
+        const time = (duration / numThumbnails) * i + (duration / numThumbnails / 2);
+        createThumbnailOption(time, i === 0);
+    }
+}
+
+function createThumbnailOption(time, isSelected) {
+    const option = document.createElement('div');
+    option.className = 'thumbnail-option' + (isSelected ? ' selected' : '');
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 240;
+    canvas.height = 135;
+    option.appendChild(canvas);
+
+    // Capture frame at specified time
+    const tempVideo = document.createElement('video');
+    tempVideo.src = recordedPreview.src;
+    tempVideo.muted = true;
+    tempVideo.preload = 'metadata';
+
+    tempVideo.onloadedmetadata = () => {
+        tempVideo.currentTime = time;
+    };
+
+    tempVideo.onseeked = () => {
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
+        tempVideo.remove();
+    };
+
+    option.onclick = () => {
+        document.querySelectorAll('.thumbnail-option').forEach(opt => {
+            opt.classList.remove('selected');
+        });
+        option.classList.add('selected');
+        selectedThumbnailTime = time;
+    };
+
+    if (isSelected) {
+        selectedThumbnailTime = time;
+    }
+
+    thumbnailGrid.appendChild(option);
 }
 
 function discardRecording() {
@@ -328,6 +390,7 @@ async function uploadRecording() {
             url: videoUrl,
             cloudinaryId: cloudinaryData.public_id,
             duration: recordingSeconds,
+            thumbnailTime: Math.round(selectedThumbnailTime),
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             createdAtLocal: new Date().toISOString()
         };
@@ -403,9 +466,12 @@ function createVideoCard(video) {
           })
         : 'Onbekend';
 
+    // Generate Cloudinary thumbnail URL
+    const thumbnailUrl = getCloudinaryThumbnail(video.url, video.thumbnailTime || 1);
+
     card.innerHTML = `
         <div class="video-thumbnail">
-            <video src="${video.url}" preload="metadata"></video>
+            <img src="${thumbnailUrl}" alt="${escapeHtml(video.title)}" loading="lazy">
             <span class="video-duration">${duration}</span>
         </div>
         <div class="video-info-card">
@@ -415,6 +481,27 @@ function createVideoCard(video) {
     `;
 
     return card;
+}
+
+function getCloudinaryThumbnail(videoUrl, timeInSeconds) {
+    // Convert Cloudinary video URL to thumbnail URL
+    // From: https://res.cloudinary.com/cloud/video/upload/v123/id.webm
+    // To:   https://res.cloudinary.com/cloud/video/upload/so_2,w_480,h_270,c_fill/v123/id.jpg
+
+    if (!videoUrl || !videoUrl.includes('cloudinary.com')) {
+        return videoUrl;
+    }
+
+    const time = Math.max(0, Math.round(timeInSeconds));
+
+    // Insert transformation after /upload/
+    const transformed = videoUrl.replace(
+        '/video/upload/',
+        `/video/upload/so_${time},w_480,h_270,c_fill/`
+    );
+
+    // Change extension to jpg
+    return transformed.replace(/\.(webm|mp4|mov|avi)$/i, '.jpg');
 }
 
 function playVideo(video) {
