@@ -511,6 +511,11 @@ function createVideoCard(video) {
             <img src="${thumbnailUrl}" alt="${escapeHtml(video.title)}" loading="lazy" data-video-url="${video.url}" data-thumb-time="${video.thumbnailTime || 1}">
             <canvas class="thumbnail-canvas" style="display: none;"></canvas>
             <span class="video-duration">${duration}</span>
+            <button class="delete-video-btn" title="Verwijderen">
+                <svg viewBox="0 0 24 24" width="20" height="20">
+                    <path fill="currentColor" d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                </svg>
+            </button>
         </div>
         <div class="video-info-card">
             <div class="video-title">${escapeHtml(video.title)}</div>
@@ -524,7 +529,46 @@ function createVideoCard(video) {
         generateVideoThumbnail(this);
     };
 
+    // Delete button handler
+    const deleteBtn = card.querySelector('.delete-video-btn');
+    deleteBtn.onclick = (e) => {
+        e.stopPropagation(); // Voorkom dat video opent
+        deleteVideoById(video.id, video.title);
+    };
+
     return card;
+}
+
+async function deleteVideoById(videoId, videoTitle) {
+    const password = prompt('Voer het wachtwoord in om "' + videoTitle + '" te verwijderen:');
+
+    if (password === null) {
+        return;
+    }
+
+    if (password !== CORRECT_PASSWORD) {
+        alert('Verkeerd wachtwoord');
+        return;
+    }
+
+    if (!confirm('Weet je zeker dat je "' + videoTitle + '" wilt verwijderen?')) {
+        return;
+    }
+
+    showLoading('Verwijderen...');
+
+    try {
+        const firestore = firebase.firestore();
+        await firestore.collection('videos').doc(videoId).delete();
+
+        hideLoading();
+        alert('Video verwijderd!');
+        loadVideos();
+    } catch (error) {
+        console.error('Error deleting:', error);
+        hideLoading();
+        alert('Fout bij verwijderen: ' + error.message);
+    }
 }
 
 function generateVideoThumbnail(imgElement) {

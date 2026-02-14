@@ -220,6 +220,32 @@ body {
     font-weight: 500;
 }
 
+.delete-video-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #fff;
+    opacity: 0;
+    transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.video-card:hover .delete-video-btn {
+    opacity: 1;
+}
+
+.delete-video-btn:hover {
+    background-color: #c00;
+}
+
 .video-info-card {
     padding: 12px 0;
 }
@@ -1022,6 +1048,10 @@ body {
 
     .video-card {
         max-width: 100%;
+    }
+
+    .delete-video-btn {
+        opacity: 1;
     }
 
     .camera-modal-content,
