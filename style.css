@@ -153,6 +153,7 @@ body {
     padding-left: 16px;
     padding-right: 16px;
     padding-bottom: 24px;
+    overflow-x: hidden;
 }
 
 .video-grid {
@@ -1015,6 +1016,12 @@ body {
 
     .video-grid {
         grid-template-columns: 1fr;
+        max-width: 100%;
+        padding: 0;
+    }
+
+    .video-card {
+        max-width: 100%;
     }
 
     .camera-modal-content,
