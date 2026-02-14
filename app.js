@@ -1001,6 +1001,17 @@ async function saveVideoEdits() {
 }
 
 async function deleteVideo() {
+    const password = prompt('Voer het wachtwoord in om te verwijderen:');
+
+    if (password === null) {
+        return; // Cancelled
+    }
+
+    if (password !== CORRECT_PASSWORD) {
+        alert('Verkeerd wachtwoord');
+        return;
+    }
+
     if (!confirm('Weet je zeker dat je deze video wilt verwijderen?')) {
         return;
     }
