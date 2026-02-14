@@ -9,6 +9,7 @@ body {
     background-color: #0f0f0f;
     color: #fff;
     min-height: 100vh;
+    overflow-x: hidden;
 }
 
 /* Header */
@@ -158,11 +159,13 @@ body {
 
 .video-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 350px));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 20px;
     max-width: 1800px;
     margin: 0 auto;
     justify-content: center;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Video Card */
@@ -1044,10 +1047,16 @@ body {
         grid-template-columns: 1fr;
         max-width: 100%;
         padding: 0;
+        gap: 16px;
     }
 
     .video-card {
+        width: 100%;
         max-width: 100%;
+    }
+
+    .video-thumbnail {
+        width: 100%;
     }
 
     .delete-video-btn {
