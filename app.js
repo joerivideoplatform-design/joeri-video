@@ -63,6 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupAdmin();
     setupFilters();
     setupEditor();
+    setupMobileSearch();
 });
 
 function setupEventListeners() {
@@ -502,7 +503,12 @@ function createVideoCard(video) {
 
     card.innerHTML = `
         <div class="video-thumbnail">
-            <img src="${thumbnailUrl}" alt="${escapeHtml(video.title)}" loading="lazy">
+            <img src="${thumbnailUrl}" alt="${escapeHtml(video.title)}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="thumbnail-placeholder" style="display: none;">
+                <svg viewBox="0 0 24 24" fill="#666">
+                    <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
+                </svg>
+            </div>
             <span class="video-duration">${duration}</span>
         </div>
         <div class="video-info-card">
@@ -937,4 +943,38 @@ async function deleteVideo() {
         hideLoading();
         alert('Fout bij verwijderen: ' + error.message);
     }
+}
+
+// ==================== MOBILE SEARCH ====================
+
+function setupMobileSearch() {
+    const mobileSearchBtn = document.getElementById('mobileSearchBtn');
+    const mobileSearchOverlay = document.getElementById('mobileSearchOverlay');
+    const mobileSearchClose = document.getElementById('mobileSearchClose');
+    const mobileSearchInput = document.getElementById('mobileSearchInput');
+
+    if (!mobileSearchBtn || !mobileSearchOverlay) return;
+
+    mobileSearchBtn.addEventListener('click', () => {
+        mobileSearchOverlay.classList.add('active');
+        mobileSearchInput.focus();
+    });
+
+    mobileSearchClose.addEventListener('click', () => {
+        mobileSearchOverlay.classList.remove('active');
+        mobileSearchInput.value = '';
+        renderVideos(videos);
+    });
+
+    mobileSearchInput.addEventListener('input', () => {
+        const query = mobileSearchInput.value.toLowerCase().trim();
+        if (!query) {
+            renderVideos(videos);
+            return;
+        }
+        const filtered = videos.filter(video =>
+            video.title.toLowerCase().includes(query)
+        );
+        renderVideos(filtered);
+    });
 }
