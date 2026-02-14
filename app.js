@@ -56,6 +56,11 @@ let siteSettings = {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    // Zoekvelden legen bij laden
+    if (searchInput) searchInput.value = '';
+    const mobileSearchInput = document.getElementById('mobileSearchInput');
+    if (mobileSearchInput) mobileSearchInput.value = '';
+
     loadSiteSettings();
     loadVideos();
     setupEventListeners();
