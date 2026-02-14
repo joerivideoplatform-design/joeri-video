@@ -503,12 +503,8 @@ function createVideoCard(video) {
 
     card.innerHTML = `
         <div class="video-thumbnail">
-            <img src="${thumbnailUrl}" alt="${escapeHtml(video.title)}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-            <div class="thumbnail-placeholder" style="display: none;">
-                <svg viewBox="0 0 24 24" fill="#666">
-                    <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
-                </svg>
-            </div>
+            <img src="${thumbnailUrl}" alt="${escapeHtml(video.title)}" loading="lazy" data-video-url="${video.url}" data-thumb-time="${video.thumbnailTime || 1}">
+            <canvas class="thumbnail-canvas" style="display: none;"></canvas>
             <span class="video-duration">${duration}</span>
         </div>
         <div class="video-info-card">
@@ -517,7 +513,52 @@ function createVideoCard(video) {
         </div>
     `;
 
+    // Add error handler for thumbnail
+    const img = card.querySelector('img');
+    img.onerror = function() {
+        generateVideoThumbnail(this);
+    };
+
     return card;
+}
+
+function generateVideoThumbnail(imgElement) {
+    const videoUrl = imgElement.dataset.videoUrl;
+    const thumbTime = parseFloat(imgElement.dataset.thumbTime) || 1;
+    const canvas = imgElement.nextElementSibling;
+
+    const tempVideo = document.createElement('video');
+    tempVideo.crossOrigin = 'anonymous';
+    tempVideo.muted = true;
+    tempVideo.preload = 'metadata';
+
+    tempVideo.onloadedmetadata = () => {
+        tempVideo.currentTime = Math.min(thumbTime, tempVideo.duration - 0.1);
+    };
+
+    tempVideo.onseeked = () => {
+        canvas.width = 480;
+        canvas.height = 270;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(tempVideo, 0, 0, canvas.width, canvas.height);
+
+        // Hide img, show canvas
+        imgElement.style.display = 'none';
+        canvas.style.display = 'block';
+        tempVideo.remove();
+    };
+
+    tempVideo.onerror = () => {
+        // Als video ook niet laadt, toon placeholder
+        imgElement.style.display = 'none';
+        canvas.style.display = 'flex';
+        canvas.style.alignItems = 'center';
+        canvas.style.justifyContent = 'center';
+        canvas.style.backgroundColor = '#2a2a2a';
+        canvas.innerHTML = '<svg viewBox="0 0 24 24" width="48" height="48" fill="#666"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>';
+    };
+
+    tempVideo.src = videoUrl;
 }
 
 function getCloudinaryThumbnail(videoUrl, timeInSeconds) {
